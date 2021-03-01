@@ -30,8 +30,6 @@ app = Flask(__name__)
 #create date and prcp dictionary
 nan = 'nan'
 
-prcp_dict = {}
-
 #create an app and pass __name__
 app = Flask(__name__)
 
@@ -46,6 +44,8 @@ def home():
         f'/api/v1.0/precipitation<br/>'
         f'/api/v1.0/station<br/>'
         f'/api/v1.0/tobs<br/>'
+        f'/api/v1.0/start<br/>'
+        f'/api/v1.0/start_end<br/>'
     )
 
 #/api/v1.0/precipitation route
@@ -54,14 +54,21 @@ def precip():
     #create session route (link from python to DB)
     session = Session(engine)
 
-    prcp_info = session.query(Measurement.date, Measurement.prcp).all()
+    prcp_info = session.query(Measurement.date, Measurement.prcp).order_by(Measurement.date).all()
     #always close the session after the query
     session.close()
 
+    #create a dictionary
+    all_prcp = []
+    for date, prcp in prcp_info:
+        prcp_dict = {}
+        prcp_dict['date'] = date
+        prcp_dict['prcp'] = prcp
+        all_prcp.append(prcp_dict)
     #unpack the tuples
-    prcp_list = list(np.ravel(prcp_info))
+    #prcp_list = list(np.ravel(prcp_info))
 
-    return jsonify(prcp_list)
+    return jsonify(all_prcp)
 
 
 #/api/v1.0/station route
@@ -74,10 +81,16 @@ def station():
     #always close the session after the query
     session.close()
 
-    #unpack the tuples
-    station_list = list(np.ravel(stations))
+    all_stations = []
+    for station in stations:
+        station_dict={}
+        station_dict['station name'] = station
+        all_stations.append(station_dict)
 
-    return jsonify(station_list)
+    #unpack the tuples
+    #station_list = list(np.ravel(stations))
+
+    return jsonify(all_stations)
 
 #/api/v1.0/tobs route
 @app.route("/api/v1.0/tobs")
@@ -93,9 +106,35 @@ def tobs():
 
     #unpack the tuples
     #station_data_list = list(np.ravel(station_data))
-    station_data_list = [result[0] for result in station_data]
+    #station_data_list = [result[0] for result in station_data]
 
-    return jsonify(station_data_list)
+    return jsonify(station_data)
+
+
+@app.route("/api/v1.0/start")
+def start():
+    # create session route (link from python to DB)
+    session = Session(engine)
+
+    station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
+
+    # date_data = session.query(*station_query).\
+    # filter(Measurement.date == '2016-08-23').\
+    # group_by(Measurement.station).\
+    # order_by(func.count(Measurement.date).desc()).all()
+
+    date_data = session.query(*station_query).\
+    filter(Measurement.date >= '2010-01-01').\
+    group_by(Measurement.station).all()
+    
+
+    session.close()
+    return jsonify(date_data)
+
+@app.route("/api/v1.0/start_end")
+def start_end():
+    #create session route (link from python to DB)
+    session = Session(engine)
 
 #merge two tables
 
