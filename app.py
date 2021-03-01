@@ -45,7 +45,7 @@ def home():
         f'/api/v1.0/station<br/>'
         f'/api/v1.0/tobs<br/>'
         f'/api/v1.0/start<br/>'
-        f'/api/v1.0/start_end<br/>'
+        f'/api/v1.0//api/v1.0/start_end<br/>'
     )
 
 #/api/v1.0/precipitation route
@@ -111,20 +111,36 @@ def tobs():
     return jsonify(station_data)
 
 
-@app.route("/api/v1.0/start")
-def start():
-    # create session route (link from python to DB)
-    session = Session(engine)
+# @app.route('/api/v1.0/start')
+# def start():
+#     # create session route (link from python to DB)
+#     session = Session(engine)
 
-    station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
+#     station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
 
-    start_date = session.query(*station_query).\
-    filter(Measurement.date >= '2010-01-01').\
-    group_by(Measurement.station).all()
+#     start_date = session.query(*station_query).\
+#     filter(Measurement.date >= '2010-01-01').\
+#     group_by(Measurement.station).all()
     
-    session.close()
+#     session.close()
 
-    return jsonify(start_date)
+#     return jsonify(start_date)
+
+
+@app.route("/api/v1.0/start")
+def start_data(start):
+    """Fetch the date info where start_date matches
+       the path variable supplied by the user, or a 404 if not."""
+
+    # canonicalized = start.replace(" ", "").lower()
+    # for date in start_data:
+    #     search_term = date_input["start"].replace(" ", "").lower()
+
+    #     if search_term == canonicalized:
+    #         return jsonify(date_input)
+
+    return jsonify({"error": f"Character with real_name {start} not found."}), 404
+
 
 @app.route("/api/v1.0/start_end")
 def start_end():
@@ -140,7 +156,16 @@ def start_end():
 
     session.close()
 
-    return jsonify(start_end_date)
+    start_end = []
+    for station, min_tob, max_tob, avg_tob in start_end_date:
+        start_end_dict = {}
+        start_end_dict['Station'] = station
+        start_end_dict['Min Temp'] = min_tob
+        start_end_dict['Max Temp'] = max_tob
+        start_end_dict['Avg Temp'] = avg_tob
+        start_end.append(start_end_dict)
+
+    return jsonify(start_end)
 #merge two tables
 
 #always end with this
