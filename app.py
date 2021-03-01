@@ -118,24 +118,29 @@ def start():
 
     station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
 
-    # date_data = session.query(*station_query).\
-    # filter(Measurement.date == '2016-08-23').\
-    # group_by(Measurement.station).\
-    # order_by(func.count(Measurement.date).desc()).all()
-
-    date_data = session.query(*station_query).\
+    start_date = session.query(*station_query).\
     filter(Measurement.date >= '2010-01-01').\
     group_by(Measurement.station).all()
     
-
     session.close()
-    return jsonify(date_data)
+
+    return jsonify(start_date)
 
 @app.route("/api/v1.0/start_end")
 def start_end():
     #create session route (link from python to DB)
     session = Session(engine)
+    
+    station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
 
+    start_end_date = session.query(*station_query).\
+    filter(Measurement.date >= '2015-01-01').\
+    filter(Measurement.date < '2017-01-01').\
+    group_by(Measurement.station).all()
+
+    session.close()
+
+    return jsonify(start_end_date)
 #merge two tables
 
 #always end with this
