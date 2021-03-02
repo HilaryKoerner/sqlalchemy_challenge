@@ -55,15 +55,16 @@ def precip():
     #create session route (link from python to DB)
     session = Session(engine)
 
-    prcp_info = session.query(Measurement.date, Measurement.prcp).order_by(Measurement.date).all()
+    prcp_info = session.query(Measurement.date, Measurement.station, Measurement.prcp).order_by(Measurement.date).all()
     #always close the session after the query
     session.close()
 
     #create a dictionary
     all_prcp = []
-    for date, prcp in prcp_info:
+    for date, station, prcp in prcp_info:
         prcp_dict = {}
         prcp_dict['date'] = date
+        prcp_dict['station'] = station
         prcp_dict['prcp'] = prcp
         all_prcp.append(prcp_dict)
     #unpack the tuples
@@ -128,19 +129,15 @@ def tobs():
     #always close the session after the query
     session.close()
 
-    tobs = []
-    for tob in tobs:
+    tob = []
+    for station, date, tobs in station_data:
         tob_dict={}
         tob_dict['Station'] = station
         tob_dict['Date'] = date
-        tob_dict['Temp']= tobs
-        tobs.append(tobs_dict)
+        tob_dict['Temp'] = tobs
+        tob.append(tob_dict)
 
-    #unpack the tuples
-    #station_data_list = list(np.ravel(station_data))
-    #station_data_list = [result[0] for result in station_data]
-
-    return jsonify(station_data)
+    return jsonify(tob)
 
 @app.route("/api/v1.0/start/<start>")
 def start(start):
