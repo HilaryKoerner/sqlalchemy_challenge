@@ -45,7 +45,7 @@ def home():
         f'/api/v1.0/station<br/>'
         f'/api/v1.0/tobs<br/>'
         f'/api/v1.0/start<br/>'
-        f'/api/v1.0//api/v1.0/start_end<br/>'
+        f'/api/v1.0/start_end<br/>'
     )
 
 #/api/v1.0/precipitation route
@@ -142,16 +142,17 @@ def start_data(start):
     return jsonify({"error": f"Character with real_name {start} not found."}), 404
 
 
-@app.route("/api/v1.0/start_end")
-def start_end():
+@app.route("/api/v1.0/start_end/<start>/<end>")
+def start_end(start, end):
     #create session route (link from python to DB)
     session = Session(engine)
     
     station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
+    print(station_query)
 
     start_end_date = session.query(*station_query).\
-    filter(Measurement.date >= '2015-01-01').\
-    filter(Measurement.date < '2017-01-01').\
+    filter(Measurement.date >= start).\
+    filter(Measurement.date < end).\
     group_by(Measurement.station).all()
 
     session.close()
@@ -166,8 +167,15 @@ def start_end():
         start_end.append(start_end_dict)
 
     return jsonify(start_end)
+
+
 #merge two tables
 
 #always end with this
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
+
+
+
+
+##http://127.0.0.1:5000/api/v1.0/start_end/2015-8-24/2017-8-24
