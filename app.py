@@ -121,27 +121,26 @@ def tobs():
 
     prev_year = dt.date(2017, 8, 23) - dt.timedelta(days=365)
 
-    station_data = session.query(Measurement.tobs).\
+    station_data = session.query(Measurement.station, Measurement.date, Measurement.tobs).\
     filter(Measurement.station == 'USC00519281').\
-    filter(Measurement.date> prev_year ).\
+    filter(Measurement.date>= prev_year ).\
     order_by((Measurement.date).desc()).all()
     #always close the session after the query
     session.close()
 
     tobs = []
-    for tob in tobs
+    for tob in tobs:
+        tob_dict={}
+        tob_dict['Station'] = station
+        tob_dict['Date'] = date
+        tob_dict['Temp']= tobs
+        tobs.append(tobs_dict)
 
     #unpack the tuples
     #station_data_list = list(np.ravel(station_data))
     #station_data_list = [result[0] for result in station_data]
 
     return jsonify(station_data)
-
-
-
-
-
-
 
 @app.route("/api/v1.0/start/<start>")
 def start(start):
