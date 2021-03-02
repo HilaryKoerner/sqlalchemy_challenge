@@ -1,5 +1,6 @@
 #import SQL mods
 import numpy as np
+import datetime as dt
 
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
@@ -91,18 +92,44 @@ def station():
     #station_list = list(np.ravel(stations))
 
     return jsonify(all_stations)
-
+#############################################################################################
+####this works
 #/api/v1.0/tobs route
+# @app.route("/api/v1.0/tobs")
+# def tobs():
+#     #create session route (link from python to DB)
+#     session = Session(engine)
+
+#     station_data = session.query(Measurement.tobs).\
+#     filter(Measurement.station == 'USC00519281').\
+#     filter(Measurement.station)
+#     order_by((Measurement.date).desc()).all()
+#     #always close the session after the query
+#     session.close()
+
+#     #unpack the tuples
+#     #station_data_list = list(np.ravel(station_data))
+#     #station_data_list = [result[0] for result in station_data]
+
+#     return jsonify(station_data)
+#################################################################################################
+
 @app.route("/api/v1.0/tobs")
 def tobs():
     #create session route (link from python to DB)
     session = Session(engine)
 
+    prev_year = dt.date(2017, 8, 23) - dt.timedelta(days=365)
+
     station_data = session.query(Measurement.tobs).\
     filter(Measurement.station == 'USC00519281').\
+    filter(Measurement.date> prev_year ).\
     order_by((Measurement.date).desc()).all()
     #always close the session after the query
     session.close()
+
+    tobs = []
+    for tob in tobs
 
     #unpack the tuples
     #station_data_list = list(np.ravel(station_data))
@@ -111,36 +138,35 @@ def tobs():
     return jsonify(station_data)
 
 
-# @app.route('/api/v1.0/start')
-# def start():
-#     # create session route (link from python to DB)
-#     session = Session(engine)
 
-#     station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
 
-#     start_date = session.query(*station_query).\
-#     filter(Measurement.date >= '2010-01-01').\
-#     group_by(Measurement.station).all()
+
+
+
+@app.route("/api/v1.0/start/<start>")
+def start(start):
+    #create session route (link from python to DB)
+    session = Session(engine)
     
-#     session.close()
+    station_query = [Measurement.station, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
+    print(station_query)
 
-#     return jsonify(start_date)
+    start_date = session.query(*station_query).\
+    filter(Measurement.date >= start).\
+    group_by(Measurement.station).all()
 
+    session.close()
 
-@app.route("/api/v1.0/start")
-def start_data(start):
-    """Fetch the date info where start_date matches
-       the path variable supplied by the user, or a 404 if not."""
+    start = []
+    for station, min_tob, max_tob, avg_tob in start_date:
+        start_dict = {}
+        start_dict['Station'] = station
+        start_dict['Min Temp'] = min_tob
+        start_dict['Max Temp'] = max_tob
+        start_dict['Avg Temp'] = avg_tob
+        start.append(start_dict)
 
-    # canonicalized = start.replace(" ", "").lower()
-    # for date in start_data:
-    #     search_term = date_input["start"].replace(" ", "").lower()
-
-    #     if search_term == canonicalized:
-    #         return jsonify(date_input)
-
-    return jsonify({"error": f"Character with real_name {start} not found."}), 404
-
+    return jsonify(start)
 
 @app.route("/api/v1.0/start_end/<start>/<end>")
 def start_end(start, end):
@@ -167,9 +193,6 @@ def start_end(start, end):
         start_end.append(start_end_dict)
 
     return jsonify(start_end)
-
-
-#merge two tables
 
 #always end with this
 if __name__ == "__main__":
